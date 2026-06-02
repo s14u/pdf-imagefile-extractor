@@ -56,38 +56,48 @@ pdf-img-merge.exe [オプション] input.pdf
 | フラグ | デフォルト | 説明 |
 |---|---|---|
 | `-o <dir>` | `.` (カレントディレクトリ) | 出力先ディレクトリ |
-| `-p <prefix>` | `page` | 出力ファイル名のプレフィックス |
+| `-p <prefix>` | `<PDFファイル名>_page` | 出力ファイル名のプレフィックス |
 | `-q <1-100>` | `95` | JPEG出力品質 |
 
 ### 出力ファイル名
 
 `<prefix><ゼロ埋めページ番号>.jpg` の形式。
 
+`-p` を省略した場合、入力PDFのファイル名（拡張子なし）に `_page` を付けたものがプレフィックスになる。
+
+| 入力ファイル | デフォルトプレフィックス | 出力例 |
+|---|---|---|
+| `WA100.pdf` | `WA100_page` | `WA100_page01.jpg` |
+| `report.PDF` | `report_page` | `report_page01.jpg` |
+
 ページ数に応じてゼロ埋め桁数が自動決定される。
 
-- 9ページ以下 → `page01.jpg`, `page02.jpg`, ...
-- 99ページ以下 → `page01.jpg` ... `page99.jpg`
-- 100ページ以上 → `page001.jpg` ...
+- 9ページ以下 → `WA100_page01.jpg`, `WA100_page02.jpg`, ...
+- 99ページ以下 → `WA100_page01.jpg` ... `WA100_page99.jpg`
+- 100ページ以上 → `WA100_page001.jpg` ...
 
 ### 実行例
 
 ```powershell
-# カレントに出力（page01.jpg, page02.jpg ...）
-pdf-img-merge.exe input.pdf
+# -p 省略: WA100_page01.jpg, WA100_page02.jpg ... が出力される
+pdf-img-merge.exe WA100.pdf
 
-# 出力先・プレフィックス・品質を指定
-pdf-img-merge.exe -o C:\output -p photo -q 90 input.pdf
+# 出力先ディレクトリを指定（プレフィックスは自動）
+pdf-img-merge.exe -o C:\output WA100.pdf
+
+# プレフィックス・品質を明示指定
+pdf-img-merge.exe -o C:\output -p photo -q 90 WA100.pdf
 ```
 
 ### 実行時の出力例
 
 ```
-読み込み完了: input.pdf (9462144 bytes)
+読み込み完了: WA100.pdf (9462144 bytes)
 ページ数: 41
-  ページ 1: 2枚結合 → C:\output\photo01.jpg
-  ページ 2: 2枚結合 → C:\output\photo02.jpg
+  ページ 1: 2枚結合 → C:\output\WA100_page01.jpg
+  ページ 2: 2枚結合 → C:\output\WA100_page02.jpg
   ...
-  ページ 41: 2枚結合 → C:\output\photo41.jpg
+  ページ 41: 2枚結合 → C:\output\WA100_page41.jpg
 
 完了: 41/41ページ処理しました
 ```
@@ -135,7 +145,7 @@ pdf-img-merge.exe -o C:\output -p photo -q 90 input.pdf
 
 - **JPEG以外の画像フォーマットは未対応**  
   JPEG2000 (`JPXDecode`)、CCITT Fax、PNG系 (`FlateDecode` + ColorSpace) 等の画像は抽出をスキップする。
-  
+
 - **JPEG再エンコードによる画質劣化**  
   分割が2枚以上の場合は `image/jpeg` で再エンコードするため、元のJPEGより画質が若干低下する可能性がある。`-q 100` を指定することで劣化を最小限に抑えられる。  
   1枚のみの場合は元のJPEGバイト列をそのまま書き出す。

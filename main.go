@@ -813,7 +813,7 @@ func mergeImages(entries []imgEntry, quality int) ([]byte, error) {
 func main() {
 	var (
 		outputDir = flag.String("o", ".", "出力ディレクトリ")
-		prefix    = flag.String("p", "page", "出力ファイル名プレフィックス")
+		prefix    = flag.String("p", "", "出力ファイル名プレフィックス (省略時: <PDFファイル名>_page)")
 		quality   = flag.Int("q", 95, "JPEG品質 (1-100)")
 	)
 	flag.Usage = func() {
@@ -822,7 +822,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "オプション:\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\n例:\n")
-		fmt.Fprintf(os.Stderr, "  pdf-img-merge input.pdf\n")
+		fmt.Fprintf(os.Stderr, "  pdf-img-merge input.pdf              # → WA100_page01.jpg ...\n")
 		fmt.Fprintf(os.Stderr, "  pdf-img-merge -o ./images -p photo -q 90 input.pdf\n")
 	}
 	flag.Parse()
@@ -832,6 +832,14 @@ func main() {
 		os.Exit(1)
 	}
 	inputPath := flag.Arg(0)
+
+	// -p 未指定の場合は "<PDFファイル名>_page" をデフォルトとする
+	// 例: WA100.pdf → WA100_page
+	if *prefix == "" {
+		base := filepath.Base(inputPath)
+		stem := strings.TrimSuffix(base, filepath.Ext(base))
+		*prefix = stem + "_page"
+	}
 
 	data, err := os.ReadFile(inputPath)
 	if err != nil {
