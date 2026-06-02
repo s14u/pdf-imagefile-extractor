@@ -812,7 +812,7 @@ func mergeImages(entries []imgEntry, quality int) ([]byte, error) {
 
 func main() {
 	var (
-		outputDir = flag.String("o", ".", "出力ディレクトリ")
+		outputDir = flag.String("o", "", "出力ディレクトリ (省略時: PDFと同じディレクトリ)")
 		prefix    = flag.String("p", "", "出力ファイル名プレフィックス (省略時: <PDFファイル名>_page)")
 		quality   = flag.Int("q", 95, "JPEG品質 (1-100)")
 	)
@@ -832,6 +832,11 @@ func main() {
 		os.Exit(1)
 	}
 	inputPath := flag.Arg(0)
+
+	// -o 未指定の場合は PDF と同じディレクトリをデフォルトとする
+	if *outputDir == "" {
+		*outputDir = filepath.Dir(inputPath)
+	}
 
 	// -p 未指定の場合は "<PDFファイル名>_page" をデフォルトとする
 	// 例: WA100.pdf → WA100_page
@@ -897,9 +902,20 @@ func main() {
 	}
 
 	fmt.Printf("\n完了: %d/%dページ処理しました\n", successCount, len(pages))
+	pause()
 }
+
+// pause はウィンドウが即座に閉じないよう、Enterキー待ちにする。
+// ターミナルから起動した場合は何もしない。
+// ドラッグ&ドロップ／ダブルクリック起動時のみ待機する。
+func pause() {
+	fmt.Print("\nEnterキーを押すと終了します...")
+	fmt.Scanln()
+}
+
 
 func fatalf(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, "エラー: "+format+"\n", args...)
+	pause()
 	os.Exit(1)
 }

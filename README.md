@@ -47,15 +47,22 @@ GOOS=windows GOARCH=amd64 go build -o pdf-img-merge.exe .
 
 ## 使い方
 
+### コマンドライン
+
 ```
 pdf-img-merge.exe [オプション] input.pdf
 ```
+
+### ドラッグ&ドロップ
+
+PDFファイルを `pdf-img-merge.exe` のアイコン上にドロップするだけで動作する。
+全オプションはデフォルト値で処理される。処理完了後はEnterキーで終了する。
 
 ### オプション
 
 | フラグ | デフォルト | 説明 |
 |---|---|---|
-| `-o <dir>` | `.` (カレントディレクトリ) | 出力先ディレクトリ |
+| `-o <dir>` | PDFと同じディレクトリ | 出力先ディレクトリ |
 | `-p <prefix>` | `<PDFファイル名>_page` | 出力ファイル名のプレフィックス |
 | `-q <1-100>` | `95` | JPEG出力品質 |
 
@@ -79,7 +86,7 @@ pdf-img-merge.exe [オプション] input.pdf
 ### 実行例
 
 ```powershell
-# -p 省略: WA100_page01.jpg, WA100_page02.jpg ... が出力される
+# デフォルト: PDFと同じディレクトリに WA100_page01.jpg ... が出力される
 pdf-img-merge.exe WA100.pdf
 
 # 出力先ディレクトリを指定（プレフィックスは自動）
@@ -94,12 +101,14 @@ pdf-img-merge.exe -o C:\output -p photo -q 90 WA100.pdf
 ```
 読み込み完了: WA100.pdf (9462144 bytes)
 ページ数: 41
-  ページ 1: 2枚結合 → C:\output\WA100_page01.jpg
-  ページ 2: 2枚結合 → C:\output\WA100_page02.jpg
+  ページ 1: 2枚結合 → C:\Users\user\Documents\WA100_page01.jpg
+  ページ 2: 2枚結合 → C:\Users\user\Documents\WA100_page02.jpg
   ...
-  ページ 41: 2枚結合 → C:\output\WA100_page41.jpg
+  ページ 41: 2枚結合 → C:\Users\user\Documents\WA100_page41.jpg
 
 完了: 41/41ページ処理しました
+
+Enterキーを押すと終了します...
 ```
 
 ---
@@ -155,3 +164,36 @@ pdf-img-merge.exe -o C:\output -p photo -q 90 WA100.pdf
 
 - **複雑なページ継承は未対応**  
   ページの `/Resources` が親 Pages ノードから継承されている構造は考慮していない。直接 `/Resources` を持たないページでは画像が抽出されない。
+
+---
+
+## 参考資料
+
+### PDF仕様 公式ドキュメント
+
+- **PDF 32000-1:2008**（ISO公式、PDF 1.7仕様）  
+  https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf  
+  xref テーブル・ストリーム・オブジェクト構造・画像XObjectの一次資料。本ツールが参照した仕様の大半はここに基づく。
+
+- **PDF 2.0 (ISO 32000-2)**（最新仕様）  
+  https://www.iso.org/standard/75839.html  
+  有償だが、Adobe による無償サマリが公開されている:  
+  https://developer.adobe.com/document-services/docs/assets/5b15559b96303194340b99820d3a70fa/PDF_ISO_32000-2_PublicPatentLicense.pdf
+
+### PDF内部構造 解説
+
+- **PDF Explained** (O'Reilly, John Whitington著)  
+  https://www.oreilly.com/library/view/pdf-explained/9781449321581/  
+  PDF構造をゼロから丁寧に解説した書籍。xref・オブジェクト・ストリームの概念理解に最適。
+
+- **PDF Structure** - pdflib.com による技術解説  
+  https://www.pdflib.com/pdf-knowledge-base/pdf-document-structure/  
+  ページ構造・リソース辞書・XObjectの関係がコンパクトにまとまっている。
+
+- **Cross-Reference Streams** (PDF 1.5+) の詳細解説  
+  https://www.pdfa.org/norm-refs/PDF32000_2008.pdf  
+  § 7.5.8 に xref ストリームの W フィールド・Index フィールドの仕様が記載されている（上記 PDF32000 の該当箇所）。
+
+- **Zopfli / FlateDecode** — RFC 1950 (zlib) / RFC 1951 (DEFLATE)  
+  https://www.rfc-editor.org/rfc/rfc1950  
+  ObjStm や xref ストリームで使われる FlateDecode の基礎仕様。
