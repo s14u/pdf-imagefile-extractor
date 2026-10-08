@@ -16,7 +16,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -618,58 +617,6 @@ type imgEntry struct {
 	height int
 }
 
-// extractPageImages は1ページの /XObject から JPEG 画像を名前順に返す。
-func extractPageImages(parser *pdfParser, pageObjNum int) ([]imgEntry, error) {
-	pageObj, _, err := parser.getObject(pageObjNum)
-	if err != nil {
-		return nil, fmt.Errorf("page object %d: %w", pageObjNum, err)
-	}
-	pageDict, ok := pageObj.(pdfDict)
-	if !ok {
-		return nil, fmt.Errorf("page %d is not a dict", pageObjNum)
-	}
-
-	resDict, err := resolveToDict(parser, pageDict["Resources"])
-	if err != nil || resDict == nil {
-		return nil, err
-	}
-
-	xobjDict, err := resolveToDict(parser, resDict["XObject"])
-	if err != nil || xobjDict == nil {
-		return nil, err
-	}
-
-	var entries []imgEntry
-	for name, ref := range xobjDict {
-		r, ok := ref.(pdfRef)
-		if !ok {
-			continue
-		}
-		obj, stmData, err := parser.getObject(int(r))
-		if err != nil {
-			continue
-		}
-		d, ok := obj.(pdfDict)
-		if !ok {
-			continue
-		}
-		if d["Subtype"] != pdfName("Image") {
-			continue
-		}
-		if d["Filter"] != pdfName("DCTDecode") {
-			continue
-		}
-		w, _ := dictInt(d, "Width")
-		h, _ := dictInt(d, "Height")
-		entries = append(entries, imgEntry{name: name, data: stmData, width: w, height: h})
-	}
-
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].name < entries[j].name
-	})
-	return entries, nil
-}
-
 // resolveToDict は値を dict として解決する（pdfRef を辿る）。
 func resolveToDict(parser *pdfParser, v interface{}) (pdfDict, error) {
 	if v == nil {
@@ -912,7 +859,6 @@ func pause() {
 	fmt.Print("\nEnterキーを押すと終了します...")
 	fmt.Scanln()
 }
-
 
 func fatalf(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, "エラー: "+format+"\n", args...)
